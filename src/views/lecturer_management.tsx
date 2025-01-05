@@ -4,7 +4,7 @@ import { PlusOutlined } from "@ant-design/icons";
 
 const { Option } = Select;
 
-const AdminManagement: React.FC = () => {
+const LecturerManagement: React.FC = () => {
     const [isDrawerOpen, setIsDrawerOpen] = useState(false);
 
     const showDrawer = () => {
@@ -175,4 +175,4 @@ const AdminManagement: React.FC = () => {
     );
 };
 
-export default AdminManagement;
+export default LecturerManagement;
