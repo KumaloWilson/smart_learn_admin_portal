@@ -10,14 +10,18 @@ import {
   SolutionOutlined,
   TeamOutlined,
 } from "@ant-design/icons";
-import { Layout, Menu, Breadcrumb, } from "antd";
+import { Layout, Menu, Breadcrumb } from "antd";
 import type { MenuProps } from "antd";
 import { theme } from "antd";
+import { QueryClient, QueryClientProvider } from "react-query"; // Import React Query
 import Dashboard from "./views/dashboard";
 import AdminManagement from './views/user_management';
 import LecturerManagement from "./views/lecturer_management";
 import StudentManagement from "./views/student_management";
 import logo from "./assets/logo.jpeg";
+
+// Create the QueryClient instance
+const queryClient = new QueryClient();
 
 const { Header, Content, Footer, Sider } = Layout;
 
@@ -60,42 +64,45 @@ const App: React.FC = () => {
   };
 
   return (
-    <Layout style={{ minHeight: "100vh" }}>
-      <Sider collapsible collapsed={collapsed} onCollapse={(value) => setCollapsed(value)}>
-        <div className="self-center justify-center items-center justify-self-center mt-8">
-          <img
-            src={logo}
-            alt="Logo"
-            style={{
-              width: "100px",
-              height: "100px", // Maintain a square aspect ratio
-              borderRadius: "50%", // Makes it circular
-              objectFit: "cover", // Ensures the image fits well
-              border: "2px solid white", // Optional: Adds a white border
-            }}
+    // Wrap everything inside QueryClientProvider
+    <QueryClientProvider client={queryClient}>
+      <Layout style={{ minHeight: "100vh" }}>
+        <Sider collapsible collapsed={collapsed} onCollapse={(value) => setCollapsed(value)}>
+          <div className="self-center justify-center items-center justify-self-center mt-8">
+            <img
+              src={logo}
+              alt="Logo"
+              style={{
+                width: "100px",
+                height: "100px", // Maintain a square aspect ratio
+                borderRadius: "50%", // Makes it circular
+                objectFit: "cover", // Ensures the image fits well
+                border: "2px solid white", // Optional: Adds a white border
+              }}
+            />
+          </div>
+          <div className="text-white text-center py-4 font-bold">LearnSmart Admin</div>
+          <Menu
+            theme="dark"
+            defaultSelectedKeys={["dashboard"]}
+            mode="inline"
+            items={items}
+            onClick={({ key }) => setSelectedTab(key)}
           />
-        </div>
-        <div className="text-white text-center py-4 font-bold">LearnSmart Admin</div>
-        <Menu
-          theme="dark"
-          defaultSelectedKeys={["dashboard"]}
-          mode="inline"
-          items={items}
-          onClick={({ key }) => setSelectedTab(key)}
-        />
-      </Sider>
-      <Layout>
-        <Header style={{ padding: 0, background: colorBgContainer }}>
-          <Breadcrumb style={{ margin: "16px" }}>
-            <Breadcrumb.Item>{selectedTab.charAt(0).toUpperCase() + selectedTab.slice(1)}</Breadcrumb.Item>
-          </Breadcrumb>
-        </Header>
-        <Content style={{ margin: "16px" }}>
-          {contentMap[selectedTab]}
-        </Content>
-        <Footer style={{ textAlign: "center" }}>LearnSmart ©{new Date().getFullYear()}</Footer>
+        </Sider>
+        <Layout>
+          <Header style={{ padding: 0, background: colorBgContainer }}>
+            <Breadcrumb style={{ margin: "16px" }}>
+              <Breadcrumb.Item>{selectedTab.charAt(0).toUpperCase() + selectedTab.slice(1)}</Breadcrumb.Item>
+            </Breadcrumb>
+          </Header>
+          <Content style={{ margin: "16px" }}>
+            {contentMap[selectedTab]}
+          </Content>
+          <Footer style={{ textAlign: "center" }}>LearnSmart ©{new Date().getFullYear()}</Footer>
+        </Layout>
       </Layout>
-    </Layout>
+    </QueryClientProvider>
   );
 };
 

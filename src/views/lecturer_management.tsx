@@ -1,177 +1,146 @@
-import React, { useState } from "react";
-import { Tag, Button, Table, Drawer, Form, Input, Row, Col, Select, DatePicker, Space } from "antd";
-import { PlusOutlined } from "@ant-design/icons";
+import React, { useState } from 'react';
+import { Layout, Typography, Button, message, Modal, Drawer, Input } from 'antd';
+import { PlusOutlined } from '@ant-design/icons';
+import { useQuery, useMutation, useQueryClient } from 'react-query';
+import { lecturerApi } from '../services/lecturer_services/api';
+import LecturerTable from '../components/lecturer/lecturer_table';
+import LecturerForm from '../components/lecturer/lecturer_form';
+import LecturerDetails from '../components/lecturer/lecturer_details';
+import type { Lecturer } from '../models/lecturer';
 
-const { Option } = Select;
+const { Content, Header } = Layout;
+const { Title } = Typography;
 
 const LecturerManagement: React.FC = () => {
     const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+    const [selectedLecturer, setSelectedLecturer] = useState<Lecturer | null>(null);
+    const [isViewModalOpen, setIsViewModalOpen] = useState(false);
+    const [searchQuery, setSearchQuery] = useState('');
+    const queryClient = useQueryClient();
 
-    const showDrawer = () => {
+    const { data: lecturers = [], isLoading } = useQuery(
+        ['lecturers', searchQuery],
+        () => lecturerApi.getAllLecturers(),
+        {
+            enabled: !!searchQuery || searchQuery === '',
+        }
+    );
+
+    const createMutation = useMutation(lecturerApi.createLecturer, {
+        onSuccess: () => {
+            queryClient.invalidateQueries('lecturers');
+            message.success('Lecturer created successfully');
+            setIsDrawerOpen(false);
+        },
+        onError: () => {
+            message.error('Failed to create lecturer');
+        },
+    });
+
+    const updateMutation = useMutation(
+        ({ id, data }: { id: string; data: Partial<Lecturer> }) =>
+            lecturerApi.updateLecturer(id, data),
+        {
+            onSuccess: () => {
+                queryClient.invalidateQueries('lecturers');
+                message.success('Lecturer updated successfully');
+                setIsDrawerOpen(false);
+            },
+            onError: () => {
+                message.error('Failed to update lecturer');
+            },
+        }
+    );
+
+    const deleteMutation = useMutation(lecturerApi.deleteLecturer, {
+        onSuccess: () => {
+            queryClient.invalidateQueries('lecturers');
+            message.success('Lecturer deleted successfully');
+        },
+        onError: () => {
+            message.error('Failed to delete lecturer');
+        },
+    });
+
+    const handleSubmit = async (values: Partial<Lecturer>) => {
+        if (selectedLecturer) {
+            await updateMutation.mutateAsync({
+                id: selectedLecturer.lecturer_id,
+                data: values,
+            });
+        } else {
+            const filteredValues = Object.fromEntries(
+                Object.entries(values).filter(([, v]) => v !== undefined)
+            ) as Omit<Lecturer, 'lecturer'>;
+            await createMutation.mutateAsync(filteredValues);
+        }
+    };
+
+    const showDrawer = (lecturer?: Lecturer) => {
+        setSelectedLecturer(lecturer || null);
         setIsDrawerOpen(true);
     };
 
-    const closeDrawer = () => {
-        setIsDrawerOpen(false);
+    const showViewModal = (lecturer: Lecturer) => {
+        setSelectedLecturer(lecturer);
+        setIsViewModalOpen(true);
     };
 
-    const columns = [
-        {
-            title: "Name",
-            dataIndex: "name",
-            key: "name",
-        },
-        {
-            title: "Email",
-            dataIndex: "email",
-            key: "email",
-        },
-        {
-            title: "Role",
-            dataIndex: "role",
-            key: "role",
-        },
-        {
-            title: "Status",
-            dataIndex: "status",
-            key: "status",
-            render: (status: string) => (
-                <Tag color={status === "active" ? "green" : "red"}>{status}</Tag>
-            ),
-        },
-        {
-            title: "Actions",
-            key: "actions",
-            render: (_: unknown, record: { name: string }) => (
-                <Button type="link" onClick={() => alert(`Editing ${record.name}`)}>
-                    Edit
-                </Button>
-            ),
-        },
-    ];
-
-    const data = [
-        { name: "John Doe", email: "john@example.com", role: "Student", status: "active" },
-        { name: "Jane Smith", email: "jane@example.com", role: "Lecturer", status: "inactive" },
-    ];
-
     return (
-        <div>
-            <Button type="primary" onClick={showDrawer} icon={<PlusOutlined />}>
-                Add User
-            </Button>
-            <Table className="mt-6" dataSource={data} columns={columns} rowKey="email" />
-            <Drawer
-                title="Create a new account"
-                width={720}
-                onClose={closeDrawer}
-                open={isDrawerOpen}
-                extra={
-                    <Space>
-                        <Button onClick={closeDrawer}>Cancel</Button>
-                        <Button onClick={closeDrawer} type="primary">
+        <Layout className="min-h-screen">
+            <Header className="bg-white shadow-md px-8 flex items-center justify-between">
+                <Title level={3} className="!mb-0">Lecturer Management</Title>
+                <Button
+                    type="primary"
+                    icon={<PlusOutlined />}
+                    onClick={() => showDrawer()}
+                >
+                    Add Lecturer
+                </Button>
+            </Header>
+
+            <Content className="p-8">
+                <Input.Search
+                    placeholder="Search by name or department"
+                    onSearch={setSearchQuery}
+                    style={{ width: 300, marginBottom: 20 }}
+                />
+
+                <LecturerTable
+                    data={lecturers}
+                    loading={isLoading}
+                    onEdit={showDrawer}
+                    onView={showViewModal}
+                    onDelete={(id) => deleteMutation.mutate(id)}
+                />
+
+                <Drawer
+                    title={selectedLecturer ? 'Edit Lecturer' : 'Add New Lecturer'}
+                    width={720}
+                    onClose={() => setIsDrawerOpen(false)}
+                    open={isDrawerOpen}
+                    extra={
+                        <Button type="primary" onClick={() => handleSubmit}>
                             Submit
                         </Button>
-                    </Space>
-                }
-            >
-                <Form layout="vertical" hideRequiredMark>
-                    <Row gutter={16}>
-                        <Col span={12}>
-                            <Form.Item
-                                name="name"
-                                label="Name"
-                                rules={[{ required: true, message: "Please enter user name" }]}
-                            >
-                                <Input placeholder="Please enter user name" />
-                            </Form.Item>
-                        </Col>
-                        <Col span={12}>
-                            <Form.Item
-                                name="url"
-                                label="Url"
-                                rules={[{ required: true, message: "Please enter url" }]}
-                            >
-                                <Input
-                                    style={{ width: "100%" }}
-                                    addonBefore="http://"
-                                    addonAfter=".com"
-                                    placeholder="Please enter url"
-                                />
-                            </Form.Item>
-                        </Col>
-                    </Row>
-                    <Row gutter={16}>
-                        <Col span={12}>
-                            <Form.Item
-                                name="owner"
-                                label="Owner"
-                                rules={[{ required: true, message: "Please select an owner" }]}
-                            >
-                                <Select placeholder="Please select an owner">
-                                    <Option value="xiao">Xiaoxiao Fu</Option>
-                                    <Option value="mao">Maomao Zhou</Option>
-                                </Select>
-                            </Form.Item>
-                        </Col>
-                        <Col span={12}>
-                            <Form.Item
-                                name="type"
-                                label="Type"
-                                rules={[{ required: true, message: "Please choose the type" }]}
-                            >
-                                <Select placeholder="Please choose the type">
-                                    <Option value="private">Private</Option>
-                                    <Option value="public">Public</Option>
-                                </Select>
-                            </Form.Item>
-                        </Col>
-                    </Row>
-                    <Row gutter={16}>
-                        <Col span={12}>
-                            <Form.Item
-                                name="approver"
-                                label="Approver"
-                                rules={[{ required: true, message: "Please choose the approver" }]}
-                            >
-                                <Select placeholder="Please choose the approver">
-                                    <Option value="jack">Jack Ma</Option>
-                                    <Option value="tom">Tom Liu</Option>
-                                </Select>
-                            </Form.Item>
-                        </Col>
-                        <Col span={12}>
-                            <Form.Item
-                                name="dateTime"
-                                label="DateTime"
-                                rules={[{ required: true, message: "Please choose the dateTime" }]}
-                            >
-                                <DatePicker.RangePicker
-                                    style={{ width: "100%" }}
-                                    getPopupContainer={(trigger) => trigger.parentElement!}
-                                />
-                            </Form.Item>
-                        </Col>
-                    </Row>
-                    <Row gutter={16}>
-                        <Col span={24}>
-                            <Form.Item
-                                name="description"
-                                label="Description"
-                                rules={[
-                                    {
-                                        required: true,
-                                        message: "please enter url description",
-                                    },
-                                ]}
-                            >
-                                <Input.TextArea rows={4} placeholder="please enter url description" />
-                            </Form.Item>
-                        </Col>
-                    </Row>
-                </Form>
-            </Drawer>
-        </div>
+                    }
+                >
+                    <LecturerForm initialValues={selectedLecturer || undefined} />
+                </Drawer>
+
+                <Modal
+                    title="Lecturer Details"
+                    open={isViewModalOpen}
+                    onCancel={() => setIsViewModalOpen(false)}
+                    footer={null}
+                    width={800}
+                >
+                    {selectedLecturer && <LecturerDetails lecturer={selectedLecturer} onEdit={function (): void {
+                        throw new Error('Function not implemented.');
+                    }} />}
+                </Modal>
+            </Content>
+        </Layout>
     );
 };
 

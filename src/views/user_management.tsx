@@ -1,177 +1,138 @@
-import React, { useState } from "react";
-import { Tag, Button, Table, Drawer, Form, Input, Row, Col, Select, DatePicker, Space } from "antd";
-import { PlusOutlined } from "@ant-design/icons";
+import React, { useState } from 'react';
+import { Layout, Typography, Button, Modal, message, Drawer } from 'antd';
+import { PlusOutlined } from '@ant-design/icons';
+import { useQuery, useMutation, useQueryClient } from 'react-query';
+import { adminApi } from '../services/admin_services/api';
+import AdminTable from '../components/admin/admin_table';
+import AdminForm from '../components/admin/admin_form';
+import AdminDetails from '../components/admin/admin_details';
+import type { Admin } from '../models/admin';
 
-const { Option } = Select;
+const { Content, Header } = Layout;
+const { Title } = Typography;
 
 const AdminManagement: React.FC = () => {
     const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+    const [selectedAdmin, setSelectedAdmin] = useState<Admin | null>(null);
+    const [isViewModalOpen, setIsViewModalOpen] = useState(false);
+    const queryClient = useQueryClient();
 
-    const showDrawer = () => {
+    const { data: admins = [], isLoading } = useQuery('admins', adminApi.getAllAdmins);
+
+    const createMutation = useMutation(adminApi.createAdmin, {
+        onSuccess: () => {
+            queryClient.invalidateQueries('admins');
+            message.success('Admin created successfully');
+            setIsDrawerOpen(false);
+        },
+        onError: () => {
+            message.error('Failed to create admin');
+        },
+    });
+
+    const updateMutation = useMutation(
+        ({ id, data }: { id: string; data: Partial<Admin> }) =>
+            adminApi.updateAdmin(id, data),
+        {
+            onSuccess: () => {
+                queryClient.invalidateQueries('admins');
+                message.success('Admin updated successfully');
+                setIsDrawerOpen(false);
+            },
+            onError: () => {
+                message.error('Failed to update admin');
+            },
+        }
+    );
+
+    const deleteMutation = useMutation(adminApi.deleteAdmin, {
+        onSuccess: () => {
+            queryClient.invalidateQueries('admins');
+            message.success('Admin deleted successfully');
+        },
+        onError: () => {
+            message.error('Failed to delete admin');
+        },
+    });
+
+    const handleSubmit = async (values: Partial<Admin>) => {
+        if (selectedAdmin) {
+            await updateMutation.mutateAsync({
+                id: selectedAdmin.uid,
+                data: values,
+            });
+        } else {
+            const filteredValues = Object.fromEntries(
+                Object.entries(values).filter(([, v]) => v !== undefined)
+            ) as Omit<Admin, 'id'>;
+            await createMutation.mutateAsync(filteredValues);
+        }
+    };
+
+    const showDrawer = (admin: Admin | null = null) => {
+        setSelectedAdmin(admin || null);
         setIsDrawerOpen(true);
     };
 
-    const closeDrawer = () => {
-        setIsDrawerOpen(false);
+    const showViewModal = (admin: Admin) => {
+        setSelectedAdmin(admin);
+        setIsViewModalOpen(true);
     };
 
-    const columns = [
-        {
-            title: "Name",
-            dataIndex: "name",
-            key: "name",
-        },
-        {
-            title: "Email",
-            dataIndex: "email",
-            key: "email",
-        },
-        {
-            title: "Role",
-            dataIndex: "role",
-            key: "role",
-        },
-        {
-            title: "Status",
-            dataIndex: "status",
-            key: "status",
-            render: (status: string) => (
-                <Tag color={status === "active" ? "green" : "red"}>{status}</Tag>
-            ),
-        },
-        {
-            title: "Actions",
-            key: "actions",
-            render: (_: unknown, record: { name: string }) => (
-                <Button type="link" onClick={() => alert(`Editing ${record.name}`)}>
-                    Edit
-                </Button>
-            ),
-        },
-    ];
-
-    const data = [
-        { name: "John Doe", email: "john@example.com", role: "Student", status: "active" },
-        { name: "Jane Smith", email: "jane@example.com", role: "Lecturer", status: "inactive" },
-    ];
+    const handleEdit = () => {
+        setIsViewModalOpen(false);
+        showDrawer(selectedAdmin || null);
+    };
 
     return (
-        <div>
-            <Button type="primary" onClick={showDrawer} icon={<PlusOutlined />}>
-                Add User
-            </Button>
-            <Table className="mt-6" dataSource={data} columns={columns} rowKey="email" />
-            <Drawer
-                title="Create a new account"
-                width={720}
-                onClose={closeDrawer}
-                open={isDrawerOpen}
-                extra={
-                    <Space>
-                        <Button onClick={closeDrawer}>Cancel</Button>
-                        <Button onClick={closeDrawer} type="primary">
+        <Layout className="min-h-screen">
+            <Header className="bg-white shadow-md px-8 flex items-center justify-between">
+                <Title level={3} className="!mb-0">Admin Management</Title>
+                <Button
+                    type="primary"
+                    icon={<PlusOutlined />}
+                    onClick={() => showDrawer()}
+                >
+                    Add Admin
+                </Button>
+            </Header>
+
+            <Content className="p-8">
+                <AdminTable
+                    data={admins}
+                    loading={isLoading}
+                    onEdit={showDrawer}
+                    onView={showViewModal}
+                    onDelete={(id) => deleteMutation.mutate(id)}
+                />
+
+                <Drawer
+                    title={selectedAdmin ? 'Edit Admin' : 'Add New Admin'}
+                    width={720}
+                    onClose={() => setIsDrawerOpen(false)}
+                    open={isDrawerOpen}
+                    extra={
+                        <Button type="primary" onClick={() => handleSubmit(selectedAdmin || {})}>
                             Submit
                         </Button>
-                    </Space>
-                }
-            >
-                <Form layout="vertical" hideRequiredMark>
-                    <Row gutter={16}>
-                        <Col span={12}>
-                            <Form.Item
-                                name="name"
-                                label="Name"
-                                rules={[{ required: true, message: "Please enter user name" }]}
-                            >
-                                <Input placeholder="Please enter user name" />
-                            </Form.Item>
-                        </Col>
-                        <Col span={12}>
-                            <Form.Item
-                                name="url"
-                                label="Url"
-                                rules={[{ required: true, message: "Please enter url" }]}
-                            >
-                                <Input
-                                    style={{ width: "100%" }}
-                                    addonBefore="http://"
-                                    addonAfter=".com"
-                                    placeholder="Please enter url"
-                                />
-                            </Form.Item>
-                        </Col>
-                    </Row>
-                    <Row gutter={16}>
-                        <Col span={12}>
-                            <Form.Item
-                                name="owner"
-                                label="Owner"
-                                rules={[{ required: true, message: "Please select an owner" }]}
-                            >
-                                <Select placeholder="Please select an owner">
-                                    <Option value="xiao">Xiaoxiao Fu</Option>
-                                    <Option value="mao">Maomao Zhou</Option>
-                                </Select>
-                            </Form.Item>
-                        </Col>
-                        <Col span={12}>
-                            <Form.Item
-                                name="type"
-                                label="Type"
-                                rules={[{ required: true, message: "Please choose the type" }]}
-                            >
-                                <Select placeholder="Please choose the type">
-                                    <Option value="private">Private</Option>
-                                    <Option value="public">Public</Option>
-                                </Select>
-                            </Form.Item>
-                        </Col>
-                    </Row>
-                    <Row gutter={16}>
-                        <Col span={12}>
-                            <Form.Item
-                                name="approver"
-                                label="Approver"
-                                rules={[{ required: true, message: "Please choose the approver" }]}
-                            >
-                                <Select placeholder="Please choose the approver">
-                                    <Option value="jack">Jack Ma</Option>
-                                    <Option value="tom">Tom Liu</Option>
-                                </Select>
-                            </Form.Item>
-                        </Col>
-                        <Col span={12}>
-                            <Form.Item
-                                name="dateTime"
-                                label="DateTime"
-                                rules={[{ required: true, message: "Please choose the dateTime" }]}
-                            >
-                                <DatePicker.RangePicker
-                                    style={{ width: "100%" }}
-                                    getPopupContainer={(trigger) => trigger.parentElement!}
-                                />
-                            </Form.Item>
-                        </Col>
-                    </Row>
-                    <Row gutter={16}>
-                        <Col span={24}>
-                            <Form.Item
-                                name="description"
-                                label="Description"
-                                rules={[
-                                    {
-                                        required: true,
-                                        message: "please enter url description",
-                                    },
-                                ]}
-                            >
-                                <Input.TextArea rows={4} placeholder="please enter url description" />
-                            </Form.Item>
-                        </Col>
-                    </Row>
-                </Form>
-            </Drawer>
-        </div>
+                    }
+                >
+                    <AdminForm initialValues={selectedAdmin || undefined} onSubmit={function (): void {
+                        throw new Error('Function not implemented.');
+                    }} />
+                </Drawer>
+
+                <Modal
+                    title="Admin Details"
+                    open={isViewModalOpen}
+                    onCancel={() => setIsViewModalOpen(false)}
+                    footer={null}
+                    width={800}
+                >
+                    {selectedAdmin && <AdminDetails admin={selectedAdmin} onEdit={handleEdit} />}
+                </Modal>
+            </Content>
+        </Layout>
     );
 };
 
