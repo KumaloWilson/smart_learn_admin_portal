@@ -58,7 +58,7 @@ const AdminManagement: React.FC = () => {
     const handleSubmit = async (values: Partial<Admin>) => {
         if (selectedAdmin) {
             await updateMutation.mutateAsync({
-                id: selectedAdmin.uid,
+                id: selectedAdmin.admin_id,
                 data: values,
             });
         } else {
