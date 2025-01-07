@@ -1,6 +1,6 @@
-import React from 'react';
-import { Table, Tag, Space, Button, Popconfirm, message } from 'antd';
-import { EditOutlined, DeleteOutlined, EyeOutlined } from '@ant-design/icons';
+import React, { useState } from 'react';
+import { Table, Tag, Space, Button, Popconfirm, message, Avatar, Tooltip, Badge } from 'antd';
+import { EditOutlined, DeleteOutlined, EyeOutlined, UserOutlined } from '@ant-design/icons';
 import type { Student } from '../../models/student';
 
 interface StudentTableProps {
@@ -18,49 +18,94 @@ const StudentTable: React.FC<StudentTableProps> = ({
     onView,
     onDelete,
 }) => {
+    const [expandedRowKeys, setExpandedRowKeys] = useState<string[]>([]);
+
+    const getStatusColor = (status: Student['enrollment_status']) => {
+        const colors: Record<Student['enrollment_status'], "default" | "success" | "error" | "warning"> = {
+            active: 'success',
+            suspended: 'error',
+            graduated: 'default',
+            withdrawn: 'default',
+            deferred: 'warning'
+        };
+        return colors[status];
+    };
+
     const columns = [
         {
-            title: 'Student ID',
-            dataIndex: 'student_id',
-            key: 'student_id',
-            sorter: (a: Student, b: Student) => a.student_id.localeCompare(b.student_id),
+            title: 'Profile',
+            key: 'profile',
+            width: 300,
+            fixed: 'left' as const,
+            render: (record: Student) => (
+                <Space>
+                    <Avatar
+                        size={64}
+                        src={record.photo_url}
+                        icon={!record.photo_url && <UserOutlined />}
+                    />
+                    <Space direction="vertical" size={0}>
+                        <span className="font-semibold">
+                            {record.first_name} {record.middle_name} {record.last_name}
+                        </span>
+                        <span className="text-gray-500">#{record.registration_number}</span>
+                        <Space>
+                            <Badge
+                                status={getStatusColor(record.enrollment_status)}
+                                text={record.enrollment_status.toUpperCase()}
+                            />
+                        </Space>
+                    </Space>
+                </Space>
+            ),
+            sorter: (a: Student, b: Student) =>
+                `${a.first_name} ${a.last_name}`.localeCompare(`${b.first_name} ${b.last_name}`),
         },
         {
-            title: 'Name',
-            key: 'name',
-            render: (_: unknown, record: Student) => `${record.title} ${record.first_name} ${record.surname}`,
-            sorter: (a: Student, b: Student) => `${a.first_name} ${a.surname}`.localeCompare(`${b.first_name} ${b.surname}`),
+            title: 'Contact',
+            key: 'contact',
+            width: 250,
+            render: (record: Student) => (
+                <Space direction="vertical" size={0}>
+                    <a href={`mailto:${record.email}`}>{record.email}</a>
+                    {record.phone && <span>{record.phone}</span>}
+                    {record.address && (
+                        <Tooltip title="Address">
+                            <span className="text-gray-500">{record.address}</span>
+                        </Tooltip>
+                    )}
+                </Space>
+            ),
         },
         {
-            title: 'Email',
-            dataIndex: 'email_address',
-            key: 'email_address',
-        },
-        {
-            title: 'Nationality',
-            dataIndex: 'nationality',
-            key: 'nationality',
-            render: (nationality: string) => (
-                <Tag color="blue">{nationality}</Tag>
+            title: 'Program Details',
+            key: 'program',
+            width: 200,
+            render: (record: Student) => (
+                <Space direction="vertical" size={0}>
+                    <span className="text-gray-500">
+                        Admitted: {new Date(record.admission_date).toLocaleDateString()}
+                    </span>
+                    {record.nationality && <Tag color="blue">{record.nationality}</Tag>}
+                </Space>
             ),
         },
         {
             title: 'Actions',
             key: 'actions',
-            render: (_: unknown, record: Student) => (
-                <Space size="middle">
-                    <Button
-                        type="text"
-                        icon={<EyeOutlined />}
-                        onClick={() => onView(record)}
-                    />
-                    <Button
-                        type="text"
-                        icon={<EditOutlined />}
-                        onClick={() => onEdit(record)}
-                    />
+            width: 150,
+            fixed: 'right' as const,
+            render: (record: Student) => (
+                <Space>
+                    <Tooltip title="View Details">
+                        <Button type="text" icon={<EyeOutlined />} onClick={() => onView(record)} />
+                    </Tooltip>
+                    <Tooltip title="Edit">
+                        <Button type="text" icon={<EditOutlined />} onClick={() => onEdit(record)} />
+                    </Tooltip>
                     <Popconfirm
-                        title="Are you sure you want to delete this student?"
+                        title="Delete Student"
+                        description="Are you sure you want to delete this student?"
                         onConfirm={() => {
                             onDelete(record.student_id);
                             message.success('Student deleted successfully');
@@ -68,12 +113,37 @@ const StudentTable: React.FC<StudentTableProps> = ({
                         okText="Yes"
                         cancelText="No"
                     >
-                        <Button type="text" danger icon={<DeleteOutlined />} />
+                        <Tooltip title="Delete">
+                            <Button type="text" danger icon={<DeleteOutlined />} />
+                        </Tooltip>
                     </Popconfirm>
                 </Space>
             ),
         },
     ];
+
+    const expandedRowRender = (record: Student) => (
+        <div className="p-4 bg-gray-50">
+            <Space direction="vertical" size="middle" className="w-full">
+                <div>
+                    <h4 className="font-semibold mb-2">Emergency Contact</h4>
+                    {record.emergency_contact_name && (
+                        <Space direction="vertical" size={0}>
+                            <span>{record.emergency_contact_name} ({record.emergency_contact_relationship})</span>
+                            <span>{record.emergency_contact_phone}</span>
+                        </Space>
+                    )}
+                </div>
+                <div>
+                    <h4 className="font-semibold mb-2">Identification</h4>
+                    <Space direction="vertical" size={0}>
+                        {record.national_id && <span>National ID: {record.national_id}</span>}
+                        {record.passport_number && <span>Passport: {record.passport_number}</span>}
+                    </Space>
+                </div>
+            </Space>
+        </div>
+    );
 
     return (
         <Table
@@ -81,11 +151,24 @@ const StudentTable: React.FC<StudentTableProps> = ({
             dataSource={data}
             loading={loading}
             rowKey="student_id"
+            expandable={{
+                expandedRowRender,
+                expandedRowKeys,
+                onExpand: (expanded, record) => {
+                    setExpandedRowKeys(
+                        expanded
+                            ? [...expandedRowKeys, record.student_id]
+                            : expandedRowKeys.filter(key => key !== record.student_id)
+                    );
+                }
+            }}
             pagination={{
                 pageSize: 10,
                 showSizeChanger: true,
                 showTotal: (total) => `Total ${total} students`,
             }}
+            scroll={{ x: 900 }}
+            className="shadow-sm rounded-lg"
         />
     );
 };
