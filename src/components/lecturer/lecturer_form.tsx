@@ -7,17 +7,19 @@ const { Option } = Select;
 
 interface LecturerFormProps {
     initialValues?: Partial<Lecturer>;
+    onSubmit: (values: Partial<Lecturer>) => void;
 }
 
-const LecturerForm: React.FC<LecturerFormProps> = ({ initialValues }) => {
+const LecturerForm: React.FC<LecturerFormProps> = ({ initialValues, onSubmit }) => {
     return (
         <Form
             layout="vertical"
             initialValues={initialValues ? {
                 ...initialValues,
                 date_of_birth: initialValues.date_of_birth ? dayjs(initialValues.date_of_birth) : undefined,
-                joined_date: initialValues.joined_date ? dayjs(initialValues.joined_date) : undefined,
+                joined_date: initialValues.date_joined ? dayjs(initialValues.date_joined) : undefined,
             } : undefined}
+            onFinish={onSubmit}
         >
             <Row gutter={16}>
                 <Col span={12}>

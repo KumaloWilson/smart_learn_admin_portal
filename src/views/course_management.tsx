@@ -1,14 +1,14 @@
 import React, { useState } from 'react';
-import { Layout, Typography, Button, message, Modal, Drawer, Input, Select, Space, Card } from 'antd';
+import { Layout, Typography, Button, message, Modal, Drawer, Input, Select, Space, Card, } from 'antd';
 import { PlusOutlined } from '@ant-design/icons';
 import { useQuery, useMutation, useQueryClient } from 'react-query';
-import { studentApi } from '../services/student_services/api';
+import { courseApi } from '../services/course_services/api';
 import { schoolApi } from '../services/school_services/api';
 import { programApi } from '../services/program_services/api';
-import StudentTable from '../components/student/student_table';
-import StudentForm from '../components/student/student_form';
-import StudentDetails from '../components/student/student_details';
-import type { Student } from '../models/student';
+import CourseTable from '../components/course/course_table';
+import CourseForm from '../components/course/course_form';
+import CourseDetails from '../components/course/course_details';
+import type { Course } from '../models/course';
 import type { School } from '../models/school';
 import type { Program } from '../models/program';
 
@@ -17,81 +17,111 @@ const { Title } = Typography;
 const { Search } = Input;
 const { Option } = Select;
 
-const StudentManagement: React.FC = () => {
+// Course level options (1.1 to 5.2)
+const COURSE_LEVELS = Array.from({ length: 9 }, (_, i) => {
+    const year = Math.floor(i / 2) + 1;
+    const semester = (i % 2) + 1;
+    return {
+        value: Number(`${year}.${semester}`),
+        label: `${year}.${semester}`
+    };
+});
+
+// Phase options (1 to 4)
+const PHASES = Array.from({ length: 4 }, (_, i) => ({
+    value: i + 1,
+    label: `Phase ${i + 1}`
+}));
+
+const CourseManagement: React.FC = () => {
     // State declarations
     const [isDrawerOpen, setIsDrawerOpen] = useState(false);
-    const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
+    const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
     const [isViewModalOpen, setIsViewModalOpen] = useState(false);
     const [searchText, setSearchText] = useState('');
     const [selectedSchool, setSelectedSchool] = useState<string>();
     const [selectedProgram, setSelectedProgram] = useState<string>();
+    const [selectedLevel, setSelectedLevel] = useState<number>();
+    const [selectedPhase, setSelectedPhase] = useState<number>();
     const queryClient = useQueryClient();
 
     // Queries
-    const { data: students = [], isLoading } = useQuery('students', studentApi.getAllStudents);
+    const { data: courses = [], isLoading } = useQuery(
+        'courses',
+        courseApi.getAllCourses
+    );
+
     const { data: schools = [] } = useQuery('schools', schoolApi.getAllSchools);
+
     const { data: programs = [] } = useQuery(
         ['programs', selectedSchool],
         () => selectedSchool ? programApi.getProgramsBySchool(selectedSchool) : [],
         { enabled: !!selectedSchool }
     );
 
-    // Filtered students based on search and filters
-    const filteredStudents = students.filter((student: Student) => {
-        const matchesSearch = searchText ? (student.first_name.toLowerCase().includes(searchText.toLowerCase()) || student.last_name.toLowerCase().includes(searchText.toLowerCase()) || student.student_id.toLowerCase().includes(searchText.toLowerCase())) : true;
-        const matchesProgram = selectedProgram ? student.current_program_id === selectedProgram : true;
-        return matchesSearch && matchesProgram;
+
+    const filteredCourses = courses.filter((course: Course) => {
+        const matchesSearch = searchText ?
+            (course.course_name.toLowerCase().includes(searchText.toLowerCase()) ||
+                course.course_code?.toLowerCase().includes(searchText.toLowerCase())) : true;
+        const matchesProgram = selectedProgram ?
+            course.program_id === selectedProgram : true;
+        const matchesLevel = selectedLevel ?
+            course.course_level === selectedLevel : true;
+        const matchesPhase = selectedPhase ?
+            course.phase === selectedPhase : true;
+        return matchesSearch && matchesProgram && matchesLevel && matchesPhase;
     });
 
     // Mutations
-    const createMutation = useMutation(studentApi.createStudent, {
+    const createMutation = useMutation(courseApi.createCourse, {
         onSuccess: () => {
-            queryClient.invalidateQueries('students');
-            message.success('Student created successfully');
+            queryClient.invalidateQueries('courses');
+            message.success('Course created successfully');
             setIsDrawerOpen(false);
         },
         onError: () => {
-            message.error('Failed to create student');
+            message.error('Failed to create course');
         },
     });
 
     const updateMutation = useMutation(
-        ({ id, data }: { id: string; data: Partial<Student> }) =>
-            studentApi.updateStudent(id, data),
+        ({ id, data }: { id: string; data: Partial<Course> }) =>
+            courseApi.updateCourse(id, data),
         {
             onSuccess: () => {
-                queryClient.invalidateQueries('students');
-                message.success('Student updated successfully');
+                queryClient.invalidateQueries('courses');
+                message.success('Course updated successfully');
                 setIsDrawerOpen(false);
             },
             onError: () => {
-                message.error('Failed to update student');
+                message.error('Failed to update course');
             },
         }
     );
 
-    const deleteMutation = useMutation(studentApi.deleteStudent, {
+    const deleteMutation = useMutation(courseApi.deleteCourse, {
         onSuccess: () => {
-            queryClient.invalidateQueries('students');
-            message.success('Student deleted successfully');
+            queryClient.invalidateQueries('courses');
+            message.success('Course deleted successfully');
         },
         onError: () => {
-            message.error('Failed to delete student');
+            message.error('Failed to delete course');
         },
     });
 
     // Handlers
-    const handleSubmit = async (values: Partial<Student>) => {
+    const handleSubmit = async (values: Partial<Course>) => {
         try {
-            if (selectedStudent) {
+            if (selectedCourse) {
                 await updateMutation.mutateAsync({
-                    id: selectedStudent.student_id,
+                    id: selectedCourse.course_id,
                     data: values,
                 });
             } else {
                 const filteredValues = Object.fromEntries(
                     Object.entries(values).filter(([, v]) => v !== undefined)
-                ) as Omit<Student, 'student_id'>;
+                ) as Omit<Course, 'course'>;
                 await createMutation.mutateAsync(filteredValues);
             }
         } catch (error) {
@@ -99,13 +129,14 @@ const StudentManagement: React.FC = () => {
         }
     };
 
-    const showDrawer = (student?: Student) => {
-        setSelectedStudent(student || null);
+
+    const showDrawer = (course?: Course) => {
+        setSelectedCourse(course || null);
         setIsDrawerOpen(true);
     };
 
-    const showViewModal = (student: Student) => {
-        setSelectedStudent(student);
+    const showViewModal = (course: Course) => {
+        setSelectedCourse(course);
         setIsViewModalOpen(true);
     };
 
@@ -117,22 +148,22 @@ const StudentManagement: React.FC = () => {
     return (
         <Layout className="min-h-screen bg-gray-50">
             <Header className="bg-white shadow-sm px-8 flex items-center justify-between">
-                <Title level={3} className="!mb-0 text-blue-900">Student Management System</Title>
+                <Title level={3} className="!mb-0 text-blue-900">Course Management System</Title>
                 <Button
                     type="primary"
                     icon={<PlusOutlined />}
                     onClick={() => showDrawer()}
                     className="bg-blue-600 hover:bg-blue-700"
                 >
-                    Add Student
+                    Add Course
                 </Button>
             </Header>
 
             <Content className="p-8">
                 <Card className="mb-6 shadow-sm">
-                    <Space size="large" className="w-full">
+                    <Space size="large" className="w-full" wrap>
                         <Search
-                            placeholder="Search students..."
+                            placeholder="Search by course name or code..."
                             allowClear
                             onChange={e => setSearchText(e.target.value)}
                             style={{ width: 300 }}
@@ -140,7 +171,7 @@ const StudentManagement: React.FC = () => {
                         />
                         <Select
                             placeholder="Select School"
-                            style={{ width: 250 }}
+                            style={{ width: 200 }}
                             onChange={handleSchoolChange}
                             value={selectedSchool}
                             allowClear
@@ -153,7 +184,7 @@ const StudentManagement: React.FC = () => {
                         </Select>
                         <Select
                             placeholder="Select Program"
-                            style={{ width: 250 }}
+                            style={{ width: 200 }}
                             onChange={setSelectedProgram}
                             value={selectedProgram}
                             disabled={!selectedSchool}
@@ -165,12 +196,38 @@ const StudentManagement: React.FC = () => {
                                 </Option>
                             ))}
                         </Select>
+                        <Select
+                            placeholder="Course Level"
+                            style={{ width: 120 }}
+                            onChange={setSelectedLevel}
+                            value={selectedLevel}
+                            allowClear
+                        >
+                            {COURSE_LEVELS.map(level => (
+                                <Option key={level.value} value={level.value}>
+                                    {level.label}
+                                </Option>
+                            ))}
+                        </Select>
+                        <Select
+                            placeholder="Phase"
+                            style={{ width: 120 }}
+                            onChange={setSelectedPhase}
+                            value={selectedPhase}
+                            allowClear
+                        >
+                            {PHASES.map(phase => (
+                                <Option key={phase.value} value={phase.value}>
+                                    {phase.label}
+                                </Option>
+                            ))}
+                        </Select>
                     </Space>
                 </Card>
 
                 <Card className="shadow-sm">
-                    <StudentTable
-                        data={filteredStudents}
+                    <CourseTable
+                        data={filteredCourses}
                         loading={isLoading}
                         onEdit={showDrawer}
                         onView={showViewModal}
@@ -179,7 +236,7 @@ const StudentManagement: React.FC = () => {
                 </Card>
 
                 <Drawer
-                    title={selectedStudent ? 'Edit Student' : 'Add New Student'}
+                    title={selectedCourse ? 'Edit Course' : 'Add New Course'}
                     width={720}
                     onClose={() => setIsDrawerOpen(false)}
                     open={isDrawerOpen}
@@ -195,24 +252,32 @@ const StudentManagement: React.FC = () => {
                         </Button>
                     }
                 >
-                    <StudentForm
-                        initialValues={selectedStudent || undefined}
-                        onFinish={handleSubmit}
+                    <CourseForm
+                        initialValues={selectedCourse || undefined}
+                        onSubmit={handleSubmit}
                     />
                 </Drawer>
 
                 <Modal
-                    title="Student Details"
+                    title="Course Details"
                     open={isViewModalOpen}
                     onCancel={() => setIsViewModalOpen(false)}
                     footer={null}
                     width={800}
                 >
-                    {selectedStudent && <StudentDetails student={selectedStudent} />}
+                    {selectedCourse && (
+                        <CourseDetails
+                            course={selectedCourse}
+                            onEdit={() => {
+                                setIsViewModalOpen(false);
+                                showDrawer(selectedCourse);
+                            }}
+                        />
+                    )}
                 </Modal>
             </Content>
         </Layout>
     );
 };
 
-export default StudentManagement;
+export default CourseManagement;

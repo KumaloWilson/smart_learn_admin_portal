@@ -103,8 +103,9 @@ const AdminManagement: React.FC = () => {
                     loading={isLoading}
                     onEdit={showDrawer}
                     onView={showViewModal}
-                    onDelete={(id) => deleteMutation.mutate(id)}
-                />
+                    onDelete={(id) => deleteMutation.mutate(id)} onToggleLock={function (): void {
+                        throw new Error('Function not implemented.');
+                    }} />
 
                 <Drawer
                     title={selectedAdmin ? 'Edit Admin' : 'Add New Admin'}

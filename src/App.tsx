@@ -9,41 +9,175 @@ import {
   IdcardOutlined,
   SolutionOutlined,
   TeamOutlined,
+  BankOutlined,
+  ScheduleOutlined,
+  DollarOutlined,
+  SafetyOutlined,
+  FileProtectOutlined,
+  AuditOutlined,
+  BookFilled,
+  BuildOutlined,
+  CalendarOutlined,
+  NotificationOutlined,
+  MessageOutlined,
+  ProjectOutlined,
+  TrophyOutlined,
+  ExperimentOutlined,
+  ClockCircleOutlined
 } from "@ant-design/icons";
 import { Layout, Menu, Breadcrumb } from "antd";
 import type { MenuProps } from "antd";
 import { theme } from "antd";
-import { QueryClient, QueryClientProvider } from "react-query"; // Import React Query
+import { QueryClient, QueryClientProvider } from "react-query";
 import Dashboard from "./views/dashboard";
 import AdminManagement from './views/user_management';
 import LecturerManagement from "./views/lecturer_management";
 import StudentManagement from "./views/student_management";
 import logo from "./assets/logo.jpeg";
+import CourseManagement from "./views/course_management";
 
-// Create the QueryClient instance
 const queryClient = new QueryClient();
-
 const { Header, Content, Footer, Sider } = Layout;
 
 const App: React.FC = () => {
   const [collapsed, setCollapsed] = useState(false);
 
   const items: MenuProps["items"] = [
-    { key: "dashboard", icon: <DashboardOutlined />, label: "Dashboard" },
+    {
+      key: "dashboard",
+      icon: <DashboardOutlined />,
+      label: "Dashboard"
+    },
+    {
+      key: "academic",
+      icon: <BankOutlined />,
+      label: "Academic",
+      children: [
+        { key: "schools", label: "Schools/Faculties", icon: <BookFilled /> },
+        { key: "departments", label: "Departments", icon: <BuildOutlined /> },
+        { key: "programs", label: "Programs", icon: <ProjectOutlined /> },
+        { key: "courses", label: "Courses", icon: <BookOutlined /> }
+      ]
+    },
     {
       key: "user-management",
       icon: <UserOutlined />,
       label: "User Management",
       children: [
-        { key: "admin", label: "Admin", icon: <IdcardOutlined /> },
-        { key: "lecturer", label: "Lecturer", icon: <SolutionOutlined /> },
-        { key: "student", label: "Student", icon: <TeamOutlined /> },
-      ],
+        { key: "admin", label: "Administrators", icon: <IdcardOutlined /> },
+        { key: "lecturer", label: "Lecturers", icon: <SolutionOutlined /> },
+        { key: "student", label: "Students", icon: <TeamOutlined /> }
+      ]
     },
-    { key: "course-management", icon: <BookOutlined />, label: "Course Management" },
-    { key: "system-settings", icon: <SettingOutlined />, label: "System Settings" },
-    { key: "reports", icon: <BarChartOutlined />, label: "Reports & Analytics" },
-    { key: "help", icon: <QuestionCircleOutlined />, label: "Help & Support" },
+    {
+      key: "schedule",
+      icon: <ScheduleOutlined />,
+      label: "Scheduling",
+      children: [
+        { key: "timetable", label: "Timetables", icon: <CalendarOutlined /> },
+        { key: "examinations", label: "Examinations", icon: <FileProtectOutlined /> },
+        { key: "rooms", label: "Room Allocation", icon: <BuildOutlined /> }
+      ]
+    },
+    {
+      key: "finance",
+      icon: <DollarOutlined />,
+      label: "Finance",
+      children: [
+        { key: "fees", label: "Fee Management" },
+        { key: "payments", label: "Payments" },
+        { key: "scholarships", label: "Scholarships" },
+        { key: "expenses", label: "Expenses" }
+      ]
+    },
+    {
+      key: "research",
+      icon: <ExperimentOutlined />,
+      label: "Research",
+      children: [
+        { key: "publications", label: "Publications" },
+        { key: "projects", label: "Research Projects" },
+        { key: "grants", label: "Grants" },
+        { key: "labs", label: "Laboratories" }
+      ]
+    },
+    {
+      key: "student-affairs",
+      icon: <TeamOutlined />,
+      label: "Student Affairs",
+      children: [
+        { key: "attendance", label: "Attendance", icon: <ClockCircleOutlined /> },
+        { key: "disciplinary", label: "Disciplinary" },
+        { key: "clubs", label: "Clubs & Societies" },
+        { key: "housing", label: "Housing" }
+      ]
+    },
+    {
+      key: "library",
+      icon: <BookOutlined />,
+      label: "Library",
+      children: [
+        { key: "books", label: "Books" },
+        { key: "journals", label: "Journals" },
+        { key: "e-resources", label: "E-Resources" },
+        { key: "reservations", label: "Reservations" }
+      ]
+    },
+    {
+      key: "communication",
+      icon: <MessageOutlined />,
+      label: "Communication",
+      children: [
+        { key: "announcements", label: "Announcements", icon: <NotificationOutlined /> },
+        { key: "emails", label: "Email Management" },
+        { key: "sms", label: "SMS Management" }
+      ]
+    },
+    {
+      key: "examination",
+      icon: <FileProtectOutlined />,
+      label: "Examination",
+      children: [
+        { key: "results", label: "Results" },
+        { key: "transcripts", label: "Transcripts" },
+        { key: "certificates", label: "Certificates" }
+      ]
+    },
+    {
+      key: "quality",
+      icon: <TrophyOutlined />,
+      label: "Quality Assurance",
+      children: [
+        { key: "evaluations", label: "Evaluations" },
+        { key: "feedback", label: "Feedback" },
+        { key: "accreditation", label: "Accreditation" }
+      ]
+    },
+    {
+      key: "security",
+      icon: <SafetyOutlined />,
+      label: "Security",
+      children: [
+        { key: "access-control", label: "Access Control" },
+        { key: "audit-logs", label: "Audit Logs", icon: <AuditOutlined /> },
+        { key: "backups", label: "Backups" }
+      ]
+    },
+    {
+      key: "system-settings",
+      icon: <SettingOutlined />,
+      label: "System Settings"
+    },
+    {
+      key: "reports",
+      icon: <BarChartOutlined />,
+      label: "Reports & Analytics"
+    },
+    {
+      key: "help",
+      icon: <QuestionCircleOutlined />,
+      label: "Help & Support"
+    }
   ];
 
   const {
@@ -54,17 +188,13 @@ const App: React.FC = () => {
 
   const contentMap: Record<string, React.ReactNode> = {
     dashboard: <Dashboard />,
-    admin: <AdminManagement />, // Placeholder for Admin page
-    lecturer: <LecturerManagement />, // Placeholder for Lecturer page
-    student: <StudentManagement />, // Placeholder for Student page
-    "course-management": <div>Course Management Page</div>, // Placeholder
-    "system-settings": <div>System Settings Page</div>, // Placeholder
-    reports: <div>Reports Page</div>, // Placeholder
-    help: <div>Help Page</div>, // Placeholder
+    admin: <AdminManagement />,
+    lecturer: <LecturerManagement />,
+    student: <StudentManagement />,
+    courses: <CourseManagement />
   };
 
   return (
-    // Wrap everything inside QueryClientProvider
     <QueryClientProvider client={queryClient}>
       <Layout style={{ minHeight: "100vh" }}>
         <Sider collapsible collapsed={collapsed} onCollapse={(value) => setCollapsed(value)}>
@@ -74,10 +204,10 @@ const App: React.FC = () => {
               alt="Logo"
               style={{
                 width: "100px",
-                height: "100px", // Maintain a square aspect ratio
-                borderRadius: "50%", // Makes it circular
-                objectFit: "cover", // Ensures the image fits well
-                border: "2px solid white", // Optional: Adds a white border
+                height: "100px",
+                borderRadius: "50%",
+                objectFit: "cover",
+                border: "2px solid white",
               }}
             />
           </div>

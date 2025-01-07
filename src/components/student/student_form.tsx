@@ -7,14 +7,15 @@ const { Option } = Select;
 
 interface StudentFormProps {
     initialValues?: Partial<Student>;
+    onFinish: (values: Partial<Student>) => void;
 }
 
-const StudentForm: React.FC<StudentFormProps> = ({ initialValues }) => {
+const StudentForm: React.FC<StudentFormProps> = ({ initialValues, onFinish }) => {
     return (
         <Form layout="vertical" initialValues={initialValues ? {
             ...initialValues,
             date_of_birth: initialValues.date_of_birth ? dayjs(initialValues.date_of_birth) : undefined,
-        } : undefined}>
+        } : undefined} onFinish={onFinish}>
             <Row gutter={16}>
                 <Col span={8}>
                     <Form.Item
