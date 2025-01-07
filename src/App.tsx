@@ -35,6 +35,9 @@ import LecturerManagement from "./views/lecturer_management";
 import StudentManagement from "./views/student_management";
 import logo from "./assets/logo.jpeg";
 import CourseManagement from "./views/course_management";
+import SchoolManagement from "./views/school_management";
+import DepartmentManagement from "./views/department_management";
+import ProgramManagement from "./views/program_management";
 
 const queryClient = new QueryClient();
 const { Header, Content, Footer, Sider } = Layout;
@@ -188,10 +191,18 @@ const App: React.FC = () => {
 
   const contentMap: Record<string, React.ReactNode> = {
     dashboard: <Dashboard />,
+
+    //Academic
+    schools: <SchoolManagement />,
+    departments: <DepartmentManagement />,
+    programs: <ProgramManagement />,
+    courses: <CourseManagement />,
+
+
+    //User Management
     admin: <AdminManagement />,
     lecturer: <LecturerManagement />,
     student: <StudentManagement />,
-    courses: <CourseManagement />
   };
 
   return (
