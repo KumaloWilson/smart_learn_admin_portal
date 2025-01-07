@@ -12,34 +12,35 @@ const AdminDetails: React.FC<AdminDetailsProps> = ({ admin, onEdit }) => {
     return (
         <div>
             <Descriptions title="Admin Details" bordered column={2}>
-                <Descriptions.Item label="UID">{admin.uid}</Descriptions.Item>
-                <Descriptions.Item label="Name">{admin.name}</Descriptions.Item>
+                <Descriptions.Item label="Admin ID">{admin.admin_id}</Descriptions.Item>
+                <Descriptions.Item label="Role ID">{admin.role_id}</Descriptions.Item>
+                <Descriptions.Item label="Employee ID">{admin.employee_id}</Descriptions.Item>
+                <Descriptions.Item label="First Name">{admin.first_name}</Descriptions.Item>
+                <Descriptions.Item label="Last Name">{admin.last_name}</Descriptions.Item>
                 <Descriptions.Item label="Email">{admin.email}</Descriptions.Item>
-                <Descriptions.Item label="Phone Number">
-                    {admin.phone_number ? admin.phone_number : 'Not Available'}
+                <Descriptions.Item label="Phone">
+                    {admin.phone ?? 'Not Available'}
                 </Descriptions.Item>
-                <Descriptions.Item label="Address">
-                    {admin.address ? admin.address : 'Not Available'}
-                </Descriptions.Item>
-                <Descriptions.Item label="Role">{admin.role}</Descriptions.Item>
                 <Descriptions.Item label="Status">
-                    {admin.is_active ? 'Active' : 'Inactive'}
-                </Descriptions.Item>
-                <Descriptions.Item label="Profile Picture">
-                    {admin.profile_picture_url ? (
-                        <img src={admin.profile_picture_url} alt="Profile" width={100} />
-                    ) : (
-                        'Not Available'
-                    )}
-                </Descriptions.Item>
-                <Descriptions.Item label="Created At">
-                    {admin.created_at ? admin.created_at.toString() : 'Not Available'}
-                </Descriptions.Item>
-                <Descriptions.Item label="Updated At">
-                    {admin.updated_at ? admin.updated_at.toString() : 'Not Available'}
+                    {admin.status.charAt(0).toUpperCase() + admin.status.slice(1)}
                 </Descriptions.Item>
                 <Descriptions.Item label="Last Login">
-                    {admin.last_login ? admin.last_login.toString() : 'Not Available'}
+                    {admin.last_login ?? 'Not Available'}
+                </Descriptions.Item>
+                <Descriptions.Item label="Failed Login Attempts">
+                    {admin.failed_login_attempts}
+                </Descriptions.Item>
+                <Descriptions.Item label="Account Locked">
+                    {admin.account_locked ? 'Yes' : 'No'}
+                </Descriptions.Item>
+                <Descriptions.Item label="Lock Timestamp">
+                    {admin.lock_timestamp ?? 'Not Available'}
+                </Descriptions.Item>
+                <Descriptions.Item label="Created At">
+                    {admin.created_at ?? 'Not Available'}
+                </Descriptions.Item>
+                <Descriptions.Item label="Updated At">
+                    {admin.updated_at ?? 'Not Available'}
                 </Descriptions.Item>
             </Descriptions>
 

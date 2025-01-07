@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Layout, Typography, Button, message, Modal, Drawer, Input, Select, Space, Card } from 'antd';
+import { Layout, Typography, Button, message, Drawer, Input, Select, Space, Card } from 'antd';
 import { PlusOutlined } from '@ant-design/icons';
 import { useQuery, useMutation, useQueryClient } from 'react-query';
 import { lecturerApi } from '../services/lecturer_services/api';
@@ -206,12 +206,12 @@ const LecturerManagement: React.FC = () => {
                     />
                 </Drawer>
 
-                <Modal
+                <Drawer
                     title="Lecturer Details"
                     open={isViewModalOpen}
-                    onCancel={() => setIsViewModalOpen(false)}
+                    onClose={() => setIsViewModalOpen(false)}
                     footer={null}
-                    width={800}
+                    width={1400}
                 >
                     {selectedLecturer && (
                         <LecturerDetails
@@ -222,7 +222,7 @@ const LecturerManagement: React.FC = () => {
                             }}
                         />
                     )}
-                </Modal>
+                </Drawer>
             </Content>
         </Layout>
     );

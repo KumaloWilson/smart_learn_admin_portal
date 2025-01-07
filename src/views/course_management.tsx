@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Layout, Typography, Button, message, Modal, Drawer, Input, Select, Space, Card, } from 'antd';
+import { Layout, Typography, Button, message, Drawer, Input, Select, Space, Card, } from 'antd';
 import { PlusOutlined } from '@ant-design/icons';
 import { useQuery, useMutation, useQueryClient } from 'react-query';
 import { courseApi } from '../services/course_services/api';
@@ -258,12 +258,12 @@ const CourseManagement: React.FC = () => {
                     />
                 </Drawer>
 
-                <Modal
+                <Drawer
                     title="Course Details"
                     open={isViewModalOpen}
-                    onCancel={() => setIsViewModalOpen(false)}
+                    onClose={() => setIsViewModalOpen(false)}
                     footer={null}
-                    width={800}
+                    width={1200}
                 >
                     {selectedCourse && (
                         <CourseDetails
@@ -274,7 +274,7 @@ const CourseManagement: React.FC = () => {
                             }}
                         />
                     )}
-                </Modal>
+                </Drawer>
             </Content>
         </Layout>
     );

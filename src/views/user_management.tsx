@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Layout, Typography, Button, Modal, message, Drawer } from 'antd';
+import { Layout, Typography, Button, message, Drawer } from 'antd';
 import { PlusOutlined } from '@ant-design/icons';
 import { useQuery, useMutation, useQueryClient } from 'react-query';
 import { adminApi } from '../services/admin_services/api';
@@ -123,15 +123,15 @@ const AdminManagement: React.FC = () => {
                     }} />
                 </Drawer>
 
-                <Modal
+                <Drawer
                     title="Admin Details"
                     open={isViewModalOpen}
-                    onCancel={() => setIsViewModalOpen(false)}
+                    onClick={() => setIsViewModalOpen(false)}
                     footer={null}
                     width={800}
                 >
                     {selectedAdmin && <AdminDetails admin={selectedAdmin} onEdit={handleEdit} />}
-                </Modal>
+                </Drawer>
             </Content>
         </Layout>
     );

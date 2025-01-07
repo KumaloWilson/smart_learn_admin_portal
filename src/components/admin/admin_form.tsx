@@ -1,10 +1,9 @@
 import React from 'react';
-import { Form, Input, Button, Select, Upload, message } from 'antd';
-import { UploadOutlined } from '@ant-design/icons';
+import { Form, Input, Button, Select, } from 'antd';
 import { Admin } from '../../models/admin';
 
 interface AdminFormProps {
-    initialValues?: Admin;
+    initialValues?: Partial<Admin>;
     onSubmit: (values: Partial<Admin>) => void;
 }
 
@@ -12,14 +11,6 @@ const { Option } = Select;
 
 const AdminForm: React.FC<AdminFormProps> = ({ initialValues, onSubmit }) => {
     const [form] = Form.useForm();
-
-    // Handle file upload
-    const handleFileUpload = (file: unknown) => {
-        // Simulate a file upload process
-        console.log('Uploading file...', file);
-        message.success('File uploaded successfully');
-        return false; // Prevents automatic upload
-    };
 
     const onFinish = (values: Partial<Admin>) => {
         onSubmit(values);
@@ -34,55 +25,88 @@ const AdminForm: React.FC<AdminFormProps> = ({ initialValues, onSubmit }) => {
             hideRequiredMark
         >
             <Form.Item
-                name="name"
-                label="Full Name"
-                rules={[{ required: true, message: 'Please enter the admin\'s full name' }]}
+                name="first_name"
+                label="First Name"
+                rules={[{ required: true, message: 'Please enter the first name' }]}
             >
-                <Input placeholder="Enter full name" />
+                <Input placeholder="Enter first name" />
+            </Form.Item>
+
+            <Form.Item
+                name="last_name"
+                label="Last Name"
+                rules={[{ required: true, message: 'Please enter the last name' }]}
+            >
+                <Input placeholder="Enter last name" />
             </Form.Item>
 
             <Form.Item
                 name="email"
                 label="Email"
-                rules={[{ required: true, message: 'Please enter the admin\'s email' }, { type: 'email', message: 'Please enter a valid email' }]}
+                rules={[
+                    { required: true, message: 'Please enter the email' },
+                    { type: 'email', message: 'Please enter a valid email' },
+                ]}
             >
                 <Input placeholder="Enter email" />
             </Form.Item>
 
             <Form.Item
-                name="phone_number"
-                label="Phone Number"
+                name="phone"
+                label="Phone"
+                rules={[{ pattern: /^[0-9]{10,15}$/, message: 'Enter a valid phone number' }]}
             >
                 <Input placeholder="Enter phone number" />
             </Form.Item>
 
             <Form.Item
-                name="address"
-                label="Address"
-            >
-                <Input.TextArea placeholder="Enter address" />
-            </Form.Item>
-
-            <Form.Item
-                name="role"
-                label="Role"
-                rules={[{ required: true, message: 'Please select the admin\'s role' }]}
+                name="role_id"
+                label="Role ID"
+                rules={[{ required: true, message: 'Please select a role' }]}
             >
                 <Select placeholder="Select role">
-                    <Option value="admin">Admin</Option>
-                    <Option value="superadmin">Superadmin</Option>
+                    <Option value="1">Admin</Option>
+                    <Option value="2">Superadmin</Option>
                 </Select>
             </Form.Item>
 
-            <Form.Item name="profile_picture_url" label="Profile Picture">
-                <Upload
-                    name="profile_picture"
-                    beforeUpload={handleFileUpload}
-                    maxCount={1}
-                    showUploadList={false}
-                >
-                    <Button icon={<UploadOutlined />}>Upload Profile Picture</Button>
-                </Upload>
+            <Form.Item
+                name="status"
+                label="Status"
+                rules={[{ required: true, message: 'Please select the status' }]}
+            >
+                <Select placeholder="Select status">
+                    <Option value="active">Active</Option>
+                    <Option value="inactive">Inactive</Option>
+                    <Option value="suspended">Suspended</Option>
+                </Select>
+            </Form.Item>
+
+            <Form.Item
+                name="failed_login_attempts"
+                label="Failed Login Attempts"
+                initialValue={0}
+                rules={[{ type: 'number', min: 0, message: 'Must be a non-negative number' }]}
+            >
+                <Input type="number" placeholder="Enter failed login attempts" />
+            </Form.Item>
+
+            <Form.Item
+                name="account_locked"
+                label="Account Locked"
+                rules={[{ required: true, message: 'Please select if the account is locked' }]}
+            >
+                <Select placeholder="Select account lock status">
+                    <Option value={true}>Yes</Option>
+                    <Option value={false}>No</Option>
+                </Select>
+            </Form.Item>
+
+            <Form.Item
+                name="lock_timestamp"
+                label="Lock Timestamp"
+            >
+                <Input placeholder="Enter lock timestamp (ISO 8601 format)" />
             </Form.Item>
 
             <Form.Item>
