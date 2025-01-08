@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Layout, Typography, Button, message, Modal, Drawer, Input, Select, Space, Card } from 'antd';
+import { Layout, Typography, Button, message, Drawer, Input, Select, Space, Card } from 'antd';
 import { PlusOutlined } from '@ant-design/icons';
 import { useQuery, useMutation, useQueryClient } from 'react-query';
 import { studentApi } from '../services/student_services/api';
@@ -201,15 +201,17 @@ const StudentManagement: React.FC = () => {
                     />
                 </Drawer>
 
-                <Modal
+                <Drawer
                     title="Student Details"
                     open={isViewModalOpen}
-                    onCancel={() => setIsViewModalOpen(false)}
+                    onClose={() => setIsViewModalOpen(false)}
                     footer={null}
-                    width={800}
+                    width={1200}
                 >
-                    {selectedStudent && <StudentDetails student={selectedStudent} />}
-                </Modal>
+                    {selectedStudent && <StudentDetails student={selectedStudent} onEdit={function (): void {
+                        throw new Error('Function not implemented.');
+                    }} />}
+                </Drawer>
             </Content>
         </Layout>
     );
